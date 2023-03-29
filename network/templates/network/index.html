@@ -1,5 +1,38 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    TODO
+<h3>Home</h1>
+
+    <div id="home-container">
+        {% if user.is_authenticated %}
+            <div class="posts-filter">
+                <div id="all-posts">All posts</div>
+                <div id="following">Following</div>
+            </div>
+            <div class="new-post">
+                <div class="profile-pic">
+                    {% if user.profile_img %}
+                        <img src="{{ user.profile_img.url }}" height="48px" width="48px" class="profile-img">
+                    {% else %}
+                        <div class="no-profile-img"><h4>{{ user.first_name|first }}</h4></div>
+                    {% endif %}
+                </div>
+                <form action="{% url 'newpost' %}" method="post" id="post">
+                    {% csrf_token %}
+                    
+                    {{ newPostForm }}
+                    <br>
+                    <input id="submit" type="submit", value="Post">
+                </form>
+            </div>
+        {% endif %}
+        <hr>
+        <div class="posts-container">
+
+            <!-- {% for post in posts %} 
+                {% include "network/post-row-template.html" %} 
+            {% empty %} 
+                Currently there are no posts to view. 
+            {% endfor %} -->
+        </div>
 {% endblock %}

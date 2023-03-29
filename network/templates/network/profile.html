@@ -1,0 +1,32 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+    <!-- {{profile}}
+    {{profileUser}} -->
+    
+    <div id="profile-container">
+        <div class="profile-header"></div>
+        <div class="profile-information">
+            <div id="follow">{{ followed_button_value }}</div>
+            <div class="profile-name"><b>{{ profileUser.first_name }} {{ profileUser.last_name }}</b></div>
+            <div class="profile-user">{{ profileUser }}</div>
+            <div class="profile-network">{{ following.count }} Following &emsp; {{ followers.count }} Followers</div>    
+        </div>
+        <div class="posts-activity-container">
+            <div class="profile-interactions span-3-col">
+                <div id="profile-posts">Posts</div>
+                <div id="profile-comments">Comments</div>
+                <div id="profile-likes">Likes</div>
+            </div>
+            <hr>
+            <div class="posts-container">
+                <!-- {% for post in posts %} 
+                    {% include "network/post-row-template.html" %} 
+                {% empty %} 
+                    Currently there are no posts to view. 
+                {% endfor %} -->
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
