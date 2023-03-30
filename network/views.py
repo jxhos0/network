@@ -78,7 +78,7 @@ def profileView(request, user):
         followers = Follower.objects.filter(following=profileUser.id)
         following = Follower.objects.filter(follower=profileUser.id)
         if Follower.objects.filter(follower=request.user, following=profileUser.id):
-            followed_button_value = "Unfollow"
+            followed_button_value = "Following"
         else:
             followed_button_value = "Follow"
         return render(request, "network/profile.html", {
@@ -130,4 +130,4 @@ def load_posts(request, profile):
 
     posts = posts.order_by("-timestamp")
 
-    return JsonResponse([post.serialize() for post in posts], safe=False)
+    return JsonResponse([post.serialize(request.user.id) for post in posts], safe=False)

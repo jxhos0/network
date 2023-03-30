@@ -24,22 +24,39 @@ class Post(models.Model):
     def __str__(self):
         return f'"{self.content[:15] + "..."}" posted by {self.user}'
     
-    def serialize(self):
-        if self.user.profile_img:
-            return {
-                "id" : self.id,
-                "user" : self.user.username,
-                "content" : self.content,
-                "timestamp" : self.timestamp,
-                "poster_img" : self.user.profile_img.url
-            }
-        else:
-            return {
-                "id" : self.id,
-                "user" : self.user.username,
-                "content" : self.content,
-                "timestamp" : self.timestamp,                
-            }
+    def serialize(self, currentUserID):
+
+        imgURL = self.user.profile_img.url if self.user.profile_img else None
+        liked = True if Like.objects.filter(post=self, user=currentUserID) else False
+        
+        return {
+            "id" : self.id,
+            "user" : self.user.username,
+            "content" : self.content,
+            "timestamp" : self.timestamp,
+            "poster_img" : imgURL,
+            "likes" : Like.objects.filter(post=self).count(),
+            "liked" : liked
+        }
+        # if self.user.profile_img:
+        #     return {
+        #         "id" : self.id,
+        #         "user" : self.user.username,
+        #         "content" : self.content,
+        #         "timestamp" : self.timestamp,
+        #         "poster_img" : self.user.profile_img.url,
+        #         "likes" : Like.objects.filter(post=self).count(),
+        #         # "liked" : Like.objects.get(post=self, user=currentUser)
+        #     }
+        # else:
+        #     return {
+        #         "id" : self.id,
+        #         "user" : self.user.username,
+        #         "content" : self.content,
+        #         "timestamp" : self.timestamp,
+        #         "likes" : Like.objects.filter(post=self).count(),
+        #         # "liked" : Like.objects.get(post=self, user=currentUser)         
+        #     }
     
 class Like(models.Model):
     post        = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="liked_post")

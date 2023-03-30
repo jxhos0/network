@@ -19,6 +19,32 @@ textarea {
 #follow {
     position: absolute;
     right: 0px;
+    width: 104px;
+    height: 36px;
+    padding-left: 16px;
+    padding-right: 16px;
+    border-radius: 20px;
+    border: 1px solid rgb(83, 100, 113);
+    text-align: center;
+    line-height: 32px;
+    background-color: rgb(29, 155, 240);
+}
+
+#follow[data-value="Following"] {
+    background-color: transparent;
+}
+
+#follow[data-value="Following"]:hover {
+    font-size: 0px;
+    background-color: rgba(255, 0, 0, .1);
+    border-color: red;
+}
+
+#follow[data-value="Following"]:hover::after {
+    color: red;
+    content: "Unfollow";
+    font-size: 16px;
+    font-weight: bold;
 }
 
 #submit {
@@ -64,12 +90,16 @@ textarea {
 .no-profile-img {
     display: flex;
     justify-content: center;
-    align-items: center;       /* THIS NEEDS TO BE ADJUSTED  */
+    align-items: center;       
     height: 48px;
     width: 48px;
     color: white;
     border-radius: 50%;
     background-color: rgb(73, 89, 99);
+}
+
+.no-profile-img h4 {
+    margin: 0;
 }
 
 .profile-img {
@@ -80,3 +110,23 @@ textarea {
     width: 48px;
     border-radius: 50%;
 }
+
+svg {
+    margin-bottom: 4px;
+}
+
+.comment:hover, .share:hover {
+    fill: rgb(29, 155, 240);
+    color: rgb(29, 155, 240);
+}
+
+.like:hover {
+    fill: rgb(249, 24, 128);
+    color: rgb(249, 24, 128);
+}
+
+.liked {
+    fill: rgb(249, 24, 128);
+    color: rgb(249, 24, 128);
+}
+
