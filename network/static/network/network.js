@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-    
-
     if (document.getElementById('home-container')) {
         var profile = document.querySelector('.current-user').innerHTML
 
@@ -10,29 +8,29 @@ document.addEventListener('DOMContentLoaded', function() {
         // console.log('index page')
 
 
-        // // Select the submit button and input to be used later
-        // const submit = document.querySelector('#submit');
-        // const newPost = document.querySelector('#id_content');
+        // Select the submit button and input to be used later
+        const submit = document.querySelector('#submit');
+        const newPost = document.querySelector('#id_content');
 
-        // // Disable submit button by default:
-        // submit.disabled = true;
+        // Disable submit button by default:
+        submit.disabled = true;
 
-        // // Listen for input to be typed into the input field
-        // newPost.onkeyup = () => {
-        //     if (newPost.value.length > 0) {
-        //         submit.disabled = false;
-        //     }
-        //     else {
-        //         submit.disabled = true;
-        //     }
-        // }
+        // Listen for input to be typed into the input field
+        newPost.onkeyup = () => {
+            if (newPost.value.length > 0) {
+                submit.disabled = false;
+            }
+            else {
+                submit.disabled = true;
+            }
+        }
 
         load_posts(`${profile}`, 'all-posts')
 
 
     } else if (document.getElementById('profile-container')) {
         var profile = document.querySelector('.profile-user').innerHTML
-        console.log(document.querySelector('.profile-user').innerHTML)
+        // console.log(document.querySelector('.profile-user').innerHTML)
 
         // console.log(document.querySelector('#follow').innerHTML)
 
@@ -40,18 +38,39 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('#profile-posts').addEventListener('click', () => load_posts(`${profile}`, 'profile-posts'));
         document.querySelector('#profile-comments').addEventListener('click', () => load_posts(`${profile}`, 'profile-comments'));
         document.querySelector('#profile-likes').addEventListener('click', () => load_posts(`${profile}`, 'profile-likes'));
-        document.querySelector('#follow').addEventListener('click', () => follow_toggle(document.querySelector('.profile-user').innerHTML, document.querySelector('#follow').innerHTML))
+        if (document.querySelector('#follow')) {
+            document.querySelector('#follow').addEventListener('click', () => follow_toggle(document.querySelector('.profile-user').innerHTML, document.querySelector('.followed-value').innerHTML))
+        }
 
         load_posts(`${profile}`, 'profile-posts')
     } 
 
+    // if (document.querySelector('.is-active')) {
+    //     document.querySelector("html").addEventListener("click", () => {
+    //         console.log("popup open")
+    //     })
+    //     // console.log("popup open")
+    // }
+
+
+    document.querySelector("html").addEventListener("click", () => {
+        if (document.querySelector('.is-active')) {
+            if (event.target.closest(".post-options")) return;
+            document.querySelector('#popup').classList.remove("is-active")
+            // console.log("popup closed")
+        }
+        // console.log("popup open")
+    })
+
+    // document.querySelector('#popup').classList.remove("is-active")
+    
 })
 
-function load_profile() {
-    var profile = document.querySelector('.profile-user').innerHTML
+// function load_profile() {
+//     var profile = document.querySelector('.profile-user').innerHTML
 
-    load_posts(profile)
-}
+//     load_posts(profile)
+// }
 
 function load_posts(profile, filter) {
 
@@ -60,8 +79,8 @@ function load_posts(profile, filter) {
     fetch(`/posts/${profile}?filter=${filter}`)
     .then(response => response.json())
     .then(posts => {
-        console.log(posts)
-        posts.forEach(post => {
+        // console.log(posts)
+        posts.forEach((post, index) => {
 
             // Create post row div
             const post_row = document.createElement('div');
@@ -71,6 +90,7 @@ function load_posts(profile, filter) {
             const likes = post.likes > 0 ? post.likes : ''
             const liked = post.liked ? 'liked' : 'like'
             const likedSVG = post.liked ? '<path d="M20.884 13.19c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path>' : '<path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path>'
+            
             post_row.innerHTML = `
                 <div class="profile-pic">
                     ${image_html}
@@ -80,7 +100,7 @@ function load_posts(profile, filter) {
                         <div class="post-details">
                             <b><a id="userprofile" href="${ post.user }">${ post.user }</a></b> ${ formatDateTime(post.timestamp) }
                         </div>
-                        <div class="post-options">&#8226;&#8226;&#8226;</div>
+                        <div class="post-options" onclick="postOptions(${post.id}, '${ post.user }', ${post.userpost}, ${post.userfollowed})">&#8226;&#8226;&#8226;</div>
                     </div>
                     <div class="post-text">${ post.content }</div>
                     <div class="post-responses span-3-col">
@@ -105,7 +125,15 @@ function load_posts(profile, filter) {
                 `
 
             document.querySelector('.posts-container').append(post_row);
+            if (index !== posts.length - 1) {
+                document.querySelector('.posts-container').insertAdjacentHTML("beforeend", '<hr>');
+            }
+            
         })
+        const popup = document.createElement('div');
+        popup.id = 'popup';
+        popup.innerHTML = "Popup fixed"
+        document.querySelector('.posts-container').append(popup);
     })
 }
 
@@ -123,6 +151,79 @@ function follow_toggle(profile, followed_value) {
     })
 }
 
+function like_toggle(post_id) {
+    // const csrftoken = getCookie('csrftoken');
+    // console.log(csrftoken)
+    fetch(`post/${post_id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            // csrftoken : getCookie('csrftoken'),
+            id: post_id
+        })
+    })
+    .then(() => {
+        location.reload()     // Maybe only reload post here?? or change svg element
+    })
+}
+
+function postOptions(post_id, profile, userpost, userfollowed) {
+
+    if (userpost) {
+        document.querySelector('#popup').innerHTML = `
+        <div onclick="editPost(${post_id})">Edit Post</div>
+        <div style="color:red" onclick="deletePost(${post_id})">Delete Post</div>
+        `
+    } else {
+        if (!userfollowed) {
+            document.querySelector('#popup').innerHTML = `
+            <div onclick="follow_toggle('${profile}', 'Follow')">Follow ${profile}</div>
+            `
+        } else {
+            document.querySelector('#popup').innerHTML = `
+            <div onclick="follow_toggle('${profile}', 'Following')">Unfollow ${profile}</div>
+            `
+        }
+    }
+    
+    const parentDimensions = document.elementFromPoint(event.clientX, event.clientY).getBoundingClientRect()
+
+    Object.assign(document.querySelector('#popup').style , {
+        left: `${parentDimensions.right + window.scrollX - 293}px`,
+        top: `${parentDimensions.top + window.scrollY }px`,
+    });
+    document.querySelector('#popup').classList.add("is-active")
+
+}
+
+function deletePost(post_id) {
+    console.log(`Delete ${post_id}`)
+    // fetch(`post/${post_id}`, {
+    //     method: 'POST',
+    //     body: JSON.stringify({
+    //         // csrftoken : getCookie('csrftoken'),
+    //         id: post_id,
+            
+    //     })
+    // })
+    // .then(() => {
+    //     location.reload()     // Maybe only reload post here?? or change svg element
+    // })
+}
+
+function editPost(post_id) {
+    console.log(`Edit ${post_id}`)
+    // fetch(`post/${post_id}`, {
+    //     method: 'POST',
+    //     body: JSON.stringify({
+    //         // csrftoken : getCookie('csrftoken'),
+    //         id: post_id,
+            
+    //     })
+    // })
+    // .then(() => {
+    //     location.reload()     // Maybe only reload post here?? or change svg element
+    // })
+}
 
 function formatDateTime(timestamp) {
     var m = new Date(timestamp);

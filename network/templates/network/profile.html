@@ -7,7 +7,9 @@
     <div id="profile-container">
         <div class="profile-header"></div>
         <div class="profile-information">
-            <div id="follow" data-value="{{followed_button_value}}"><b>{{ followed_button_value }}</b></div>
+            {% if currentUser != profileUser %}
+                <div id="follow" data-value="{{followed_button_value}}"><b class="followed-value">{{ followed_button_value }}</b></div>
+            {% endif %}
             <div class="profile-name"><b>{{ profileUser.first_name }} {{ profileUser.last_name }}</b></div>
             <div class="profile-user">{{ profileUser }}</div>
             <div class="profile-network">{{ following.count }} Following &emsp; {{ followers.count }} Followers</div>    

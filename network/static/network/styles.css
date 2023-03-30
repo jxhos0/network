@@ -78,7 +78,6 @@ textarea {
     grid-template-columns: 48px 1fr;
     gap: 12px;
     margin: .5rem;
-    border-bottom: 1px solid lightgray;
 }
 
 .span-3-col {
@@ -111,6 +110,10 @@ textarea {
     border-radius: 50%;
 }
 
+.post-options:hover {
+    color: rgb(29, 155, 240);
+}
+
 svg {
     margin-bottom: 4px;
 }
@@ -129,4 +132,27 @@ svg {
     fill: rgb(249, 24, 128);
     color: rgb(249, 24, 128);
 }
+
+#popup {
+    visibility: hidden;
+    position: absolute;
+    width: 293px;
+    padding-left: 10px;
+    padding-top: 10px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0px 0px 4px 2px rgba(0, 0, 0, .2);
+    /* display: none; */
+}
+
+#popup.is-active {  
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#popup div {
+    padding-bottom: 10px;
+    font-weight: bold;
+}
+
 

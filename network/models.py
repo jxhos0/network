@@ -28,6 +28,8 @@ class Post(models.Model):
 
         imgURL = self.user.profile_img.url if self.user.profile_img else None
         liked = True if Like.objects.filter(post=self, user=currentUserID) else False
+        userpost = True if self.user.id == currentUserID else False
+        userfollowed = True if Follower.objects.filter(follower=User.objects.get(pk=currentUserID), following=self.user) else False
         
         return {
             "id" : self.id,
@@ -36,7 +38,9 @@ class Post(models.Model):
             "timestamp" : self.timestamp,
             "poster_img" : imgURL,
             "likes" : Like.objects.filter(post=self).count(),
-            "liked" : liked
+            "liked" : liked,
+            "userpost" : userpost,
+            "userfollowed" : userfollowed
         }
         # if self.user.profile_img:
         #     return {

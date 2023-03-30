@@ -13,6 +13,7 @@ from.forms import NewPostForm
 
 
 def index(request):
+
     return render(request, "network/index.html", {
         "newPostForm" : NewPostForm(initial={"user" : request.user})
     })
@@ -42,7 +43,7 @@ def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
 
-
+# ADD FIRST AND LAST NAME TO REGISTRATION FUNCTION
 def register(request):
     if request.method == "POST":
         username = request.POST["username"]
@@ -70,8 +71,31 @@ def register(request):
     else:
         return render(request, "network/register.html")
 
+def newPost(request):
+    # Check for form submission
+    if request.method == "POST":
+
+        # Fill form with user entries
+        form = NewPostForm(request.POST or None, request.FILES or None)
+
+        # print(form)
+
+        # Check fields are valid and required fields have data
+        if form.is_valid():
+            form.save()    # Save the form data in database
+
+            # Redirect user to index page
+            return HttpResponseRedirect(reverse("index"))
+        
+        # Return user to create page with error message
+        else:
+            return render(request, "auctions/index.html", {
+                "newPostForm" : form
+            })  
+        
 @csrf_exempt
 def profileView(request, user):
+    
     profileUser = User.objects.get(username=user)
 
     if request.method == "GET":
@@ -92,21 +116,43 @@ def profileView(request, user):
         data = json.loads(request.body)
         if data.get("followed") == "Follow":
             Follower.objects.create(follower=request.user, following=profileUser).save()
-        elif data.get("followed") == "Unfollow":
+        elif data.get("followed") == "Following":
             Follower.objects.get(follower=request.user, following=profileUser.id).delete()
         return HttpResponse(status=204)
 
-    
+@csrf_exempt
+def postData(request, post_id):
 
-def newPost(request):
-    return
+    try:
+        post = Post.objects.get(pk=post_id)
+    except Post.DoesNotExist:
+        return JsonResponse({"error": "Post not found."}, status=404)
+
+    if request.method == "PUT":
+
+        likes = Like.objects.filter(post=post_id, user=request.user)
+
+        # data=json.loads(request.body)
+
+        # print(data)
+        # if data.get('id'):
+        if likes:
+            likes.delete()
+        else:
+            Like.objects.create(post=post, user=request.user).save()
+ 
+        return HttpResponse(status=204)
+    else:
+        return JsonResponse({
+            "error": "GET or PUT request required."
+        }, status=400)
 
 def load_posts(request, profile):
     # if request.GET == "'all-posts'":  
     #     print('yes')
     
-    print(request.GET.get('filter'))
-    print(profile)
+    # print(request.GET.get('filter'))
+    # print(profile)
 
     profileUser = User.objects.get(username=profile)
     filter = request.GET.get('filter')
