@@ -5,6 +5,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.http import JsonResponse
+from django.utils import timezone
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -132,20 +133,28 @@ def postData(request, post_id):
 
         likes = Like.objects.filter(post=post_id, user=request.user)
 
-        # data=json.loads(request.body)
-
-        # print(data)
-        # if data.get('id'):
         if likes:
             likes.delete()
         else:
             Like.objects.create(post=post, user=request.user).save()
  
         return HttpResponse(status=204)
+    elif request.method == "POST":
+        data=json.loads(request.body)
+        
+        if data.get('process') == 'edit':
+            Post.objects.filter(pk=post_id).update(content=data.get('updated_post_text'), updatedtimestamp=timezone.now())
+            return HttpResponse(status=204)
+        
+        elif data.get('process') == 'delete':
+            Post.objects.filter(pk=post_id).delete()
+            return HttpResponse(status=204)
+
     else:
         return JsonResponse({
-            "error": "GET or PUT request required."
+            "error": "PUT or POST request required."
         }, status=400)
+    
 
 def load_posts(request, profile):
     # if request.GET == "'all-posts'":  

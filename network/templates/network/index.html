@@ -1,11 +1,13 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-<h3>Home</h1>
 
     <div id="home-container">
+
+        <h3>Home</h3>
+
         {% if user.is_authenticated %}
-            <div class="posts-filter">
+            <div class="posts-filter span-2-col">
                 <div id="all-posts">All posts</div>
                 <div id="following">Following</div>
             </div>

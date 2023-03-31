@@ -98,27 +98,34 @@ function load_posts(profile, filter) {
                 <div class="post-content">
                     <div class="post-head">
                         <div class="post-details">
-                            <b><a id="userprofile" href="${ post.user }">${ post.user }</a></b> ${ formatDateTime(post.timestamp) }
+                            <b><a id="userprofile" href="${ post.user }">${ post.user }</a></b> ${ post.timestamp }
                         </div>
                         <div class="post-options" onclick="postOptions(${post.id}, '${ post.user }', ${post.userpost}, ${post.userfollowed})">&#8226;&#8226;&#8226;</div>
                     </div>
-                    <div class="post-text">${ post.content }</div>
-                    <div class="post-responses span-3-col">
+                    <div class="post-text post-${post.id}">${ post.content }</div>
+                    <div class="post-responses post-${post.id} span-3-col">
                         <div class="${liked}" onclick="like_toggle(${post.id})">
-                            <svg viewBox="0 0 24 24" height="1.15em">
-                                ${likedSVG}
-                            </svg>
-                            <span>${likes}</span>
+                            <div class="${liked}-svg">
+                                <svg viewBox="0 0 24 24" height="1.15em">
+                                    ${likedSVG}
+                                </svg>
+                            </div>
+
+                            <div>${likes}</div>
                         </div>
                         <div class="comment">
-                            <svg viewBox="0 0 24 24" height="1.15em">
-                                <path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path>
-                            </svg>
+                            <div class="comment-svg">
+                                <svg viewBox="0 0 24 24" height="1.15em">
+                                    <path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path>
+                                </svg>
+                            </div>
                         </div>
                         <div class="share">
-                            <svg viewBox="0 0 24 24" height="1.15em">
-                                <path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"></path>
-                            </svg>
+                            <div class="share-svg">
+                                <svg viewBox="0 0 24 24" height="1.15em">
+                                    <path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -130,10 +137,10 @@ function load_posts(profile, filter) {
             }
             
         })
-        const popup = document.createElement('div');
-        popup.id = 'popup';
-        popup.innerHTML = "Popup fixed"
-        document.querySelector('.posts-container').append(popup);
+        // const popup = document.createElement('div');
+        // popup.id = 'popup';
+        // popup.innerHTML = ""
+        // document.querySelector('.posts-container').append(popup);
     })
 }
 
@@ -171,7 +178,7 @@ function postOptions(post_id, profile, userpost, userfollowed) {
     if (userpost) {
         document.querySelector('#popup').innerHTML = `
         <div onclick="editPost(${post_id})">Edit Post</div>
-        <div style="color:red" onclick="deletePost(${post_id})">Delete Post</div>
+        <div style="color:red" onclick="deleteConfirmation(${post_id})">Delete Post</div>
         `
     } else {
         if (!userfollowed) {
@@ -195,8 +202,31 @@ function postOptions(post_id, profile, userpost, userfollowed) {
 
 }
 
+function deleteConfirmation(post_id) {
+    document.querySelector('#modal').showModal()
+
+    document.querySelector('.deletePost').addEventListener('click', () => {
+        fetch(`post/${post_id}`, {
+            method: 'POST',
+            body: JSON.stringify({
+                // csrftoken : getCookie('csrftoken'),
+                process : 'delete',
+                
+            })
+        })
+        .then(() => {
+            location.reload()     // Maybe only reload post here?? or change svg element
+        })
+    });
+
+    document.querySelector('.cancelDelete').addEventListener('click', () => {
+        document.querySelector('#modal').close()
+    })
+}
+
 function deletePost(post_id) {
     console.log(`Delete ${post_id}`)
+    
     // fetch(`post/${post_id}`, {
     //     method: 'POST',
     //     body: JSON.stringify({
@@ -211,19 +241,54 @@ function deletePost(post_id) {
 }
 
 function editPost(post_id) {
-    console.log(`Edit ${post_id}`)
-    // fetch(`post/${post_id}`, {
-    //     method: 'POST',
-    //     body: JSON.stringify({
-    //         // csrftoken : getCookie('csrftoken'),
-    //         id: post_id,
-            
-    //     })
-    // })
-    // .then(() => {
-    //     location.reload()     // Maybe only reload post here?? or change svg element
-    // })
+    if (document.querySelector('.cancelEdit')) return;
+
+    // console.log(document.querySelector(`.post-${post_id}`).innerHTML)
+
+    var initial_text = document.querySelector(`.post-${post_id}`).innerHTML
+    var post_responses_initial_html = document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML
+    console.log(initial_text)
+    console.log(post_responses_initial_html)
+
+    document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-2-col`
+
+    document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML = `
+    <div class="cancelEdit">Cancel</div>
+    <div class="saveEdit">Update</div>
+    `
+
+    document.querySelector(`.post-${post_id}`).innerHTML = `
+        <textarea name="content" cols="40" rows="2" maxlength="300" placeholder="What's happening?" required="" id="id_content">${initial_text}</textarea>
+    `
+
+    document.querySelector('.cancelEdit').addEventListener('click', () => {
+        document.querySelector(`.post-${post_id}`).innerHTML = `${initial_text}`
+        document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-3-col`
+        document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML = `${post_responses_initial_html}`   
+    })
+
+    document.querySelector('.saveEdit').addEventListener('click', () => {
+        const updated_post_text = document.querySelector(`.post-${post_id} #id_content`).value
+
+        fetch(`post/${post_id}`, {
+            method: 'POST',
+            body: JSON.stringify({
+                // csrftoken : getCookie('csrftoken'),
+                process: 'edit',
+                updated_post_text: updated_post_text
+            })
+        })
+        .then(() => {
+            document.querySelector(`.post-${post_id}`).innerHTML = `${updated_post_text}`
+            document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-3-col`
+            document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML = `${post_responses_initial_html}` 
+        })
+    })
+    
+
+
 }
+
 
 function formatDateTime(timestamp) {
     var m = new Date(timestamp);

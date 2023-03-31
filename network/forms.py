@@ -13,4 +13,5 @@ class NewPostForm(forms.ModelForm):
         widgets = {
             "content" : forms.Textarea(attrs={'rows':2}),
             "user" : forms.HiddenInput(),
+            "updatedtimestamp" : forms.HiddenInput(),
         }

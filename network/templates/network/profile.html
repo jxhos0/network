@@ -1,8 +1,6 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    <!-- {{profile}}
-    {{profileUser}} -->
     
     <div id="profile-container">
         <div class="profile-header"></div>
@@ -10,7 +8,7 @@
             {% if currentUser != profileUser %}
                 <div id="follow" data-value="{{followed_button_value}}"><b class="followed-value">{{ followed_button_value }}</b></div>
             {% endif %}
-            <div class="profile-name"><b>{{ profileUser.first_name }} {{ profileUser.last_name }}</b></div>
+            <div class="profile-name">{{ profileUser.first_name }} {{ profileUser.last_name }}</div>
             <div class="profile-user">{{ profileUser }}</div>
             <div class="profile-network">{{ following.count }} Following &emsp; {{ followers.count }} Followers</div>    
         </div>
@@ -28,7 +26,6 @@
                     Currently there are no posts to view. 
                 {% endfor %} -->
             </div>
-
         </div>
     </div>
 {% endblock %}
