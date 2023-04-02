@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.http import JsonResponse
 from django.utils import timezone
+from django.core.paginator import Paginator
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -123,7 +124,7 @@ def profileView(request, user):
 
 @csrf_exempt
 def postData(request, post_id):
-
+    print(request)
     try:
         post = Post.objects.get(pk=post_id)
     except Post.DoesNotExist:
@@ -157,11 +158,6 @@ def postData(request, post_id):
     
 
 def load_posts(request, profile):
-    # if request.GET == "'all-posts'":  
-    #     print('yes')
-    
-    # print(request.GET.get('filter'))
-    # print(profile)
 
     profileUser = User.objects.get(username=profile)
     filter = request.GET.get('filter')
@@ -170,7 +166,6 @@ def load_posts(request, profile):
         posts = Post.objects.all()
     elif filter == "following":
         followed_profiles = Follower.objects.filter(follower = request.user).values("following")
-        # print(followed_profiles)
         posts = Post.objects.filter(user__in=followed_profiles)
 
     elif filter == "profile-posts":
@@ -180,9 +175,15 @@ def load_posts(request, profile):
 
     elif filter == "profile-likes":
         liked_posts = Like.objects.filter(user=profileUser).values("post")
-        # print(posts)
         posts = Post.objects.filter(pk__in=liked_posts)
 
     posts = posts.order_by("-timestamp")
 
-    return JsonResponse([post.serialize(request.user.id) for post in posts], safe=False)
+    paginator = Paginator(posts, 2)
+
+    page_number = request.GET.get('page')
+    posts = paginator.get_page(page_number)
+
+    # print(paginator.num_pages)
+
+    return JsonResponse({"posts" : [post.serialize(request.user.id) for post in posts], "number_pages" : paginator.num_pages}, safe=False)

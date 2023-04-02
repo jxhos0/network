@@ -13,12 +13,10 @@ textarea {
     max-width: 598px;
     border-left: 1px solid lightgray;
     border-right: 1px solid lightgray;
-    /* margin: auto; */
 }
 
 #follow {
     position: relative;
-    /* margin: 5px; */
     float: right;
     width: 104px;
     height: 36px;
@@ -29,10 +27,12 @@ textarea {
     text-align: center;
     line-height: 32px;
     background-color: rgb(29, 155, 240);
+    color: white;
 }
 
 #follow[data-value="Following"] {
     background-color: transparent;
+    color: black;
 }
 
 #follow[data-value="Following"]:hover {
@@ -80,15 +80,17 @@ textarea {
     margin: .5rem;
 }
 
+.new-post #id_content {
+    padding: 5px;
+    border-radius: 5px;
+}
+
 .post-container {
     display: grid;
     grid-template-columns: 48px 1fr;
     gap: 12px;
     margin: .5rem;
 }
-
-
-
 
 .no-profile-img {
     display: flex;
@@ -163,7 +165,6 @@ svg {
 }
 
 .like:hover .like-svg, .liked:hover .liked-svg {
-    
     background: rgba(249, 24, 128, 0.1);
 }
 
@@ -219,4 +220,11 @@ svg {
     border: 1px solid red;
     color: white;
     margin-bottom: 8px;
+}
+
+.paginator {
+    display: flex;
+    justify-content: center;
+    gap: 3px;
+    /* align-items: center;     */
 }

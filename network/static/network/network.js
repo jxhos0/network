@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('home-container')) {
         var profile = document.querySelector('.current-user').innerHTML
 
-        document.querySelector('#all-posts').addEventListener('click', () => load_posts(`${profile}`, 'all-posts'));
-        document.querySelector('#following').addEventListener('click', () => load_posts(`${profile}`, 'following'));
+        document.querySelector('#all-posts').addEventListener('click', () => load_posts(`${profile}`, 'all-posts', 1));
+        document.querySelector('#following').addEventListener('click', () => load_posts(`${profile}`, 'following', 1));
         // console.log('index page')
 
 
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        load_posts(`${profile}`, 'all-posts')
+        load_posts(`${profile}`, 'all-posts', 1)
 
 
     } else if (document.getElementById('profile-container')) {
@@ -35,112 +35,130 @@ document.addEventListener('DOMContentLoaded', function() {
         // console.log(document.querySelector('#follow').innerHTML)
 
 
-        document.querySelector('#profile-posts').addEventListener('click', () => load_posts(`${profile}`, 'profile-posts'));
-        document.querySelector('#profile-comments').addEventListener('click', () => load_posts(`${profile}`, 'profile-comments'));
-        document.querySelector('#profile-likes').addEventListener('click', () => load_posts(`${profile}`, 'profile-likes'));
+        document.querySelector('#profile-posts').addEventListener('click', () => load_posts(`${profile}`, 'profile-posts', 1));
+        document.querySelector('#profile-comments').addEventListener('click', () => load_posts(`${profile}`, 'profile-comments', 1));
+        document.querySelector('#profile-likes').addEventListener('click', () => load_posts(`${profile}`, 'profile-likes', 1));
         if (document.querySelector('#follow')) {
             document.querySelector('#follow').addEventListener('click', () => follow_toggle(document.querySelector('.profile-user').innerHTML, document.querySelector('.followed-value').innerHTML))
         }
 
-        load_posts(`${profile}`, 'profile-posts')
+        load_posts(`${profile}`, 'profile-posts', 1)
     } 
-
-    // if (document.querySelector('.is-active')) {
-    //     document.querySelector("html").addEventListener("click", () => {
-    //         console.log("popup open")
-    //     })
-    //     // console.log("popup open")
-    // }
-
 
     document.querySelector("html").addEventListener("click", () => {
         if (document.querySelector('.is-active')) {
             if (event.target.closest(".post-options")) return;
             document.querySelector('#popup').classList.remove("is-active")
-            // console.log("popup closed")
-        }
-        // console.log("popup open")
-    })
 
-    // document.querySelector('#popup').classList.remove("is-active")
-    
+        }
+    })    
 })
 
-// function load_profile() {
-//     var profile = document.querySelector('.profile-user').innerHTML
 
-//     load_posts(profile)
-// }
-
-function load_posts(profile, filter) {
+function load_posts(profile, filter, page) {
 
     document.querySelector('.posts-container').innerHTML = ''
     
-    fetch(`/posts/${profile}?filter=${filter}`)
+    fetch(`/posts/${profile}?filter=${filter}&page=${page}`)
     .then(response => response.json())
-    .then(posts => {
-        // console.log(posts)
-        posts.forEach((post, index) => {
+    .then(response => {
 
-            // Create post row div
-            const post_row = document.createElement('div');
-            post_row.classList.add('post-container');
+        var current_page = Number(page)
+        var number_pages = Number(response['number_pages'])
+        var posts = response['posts']
 
-            const image_html = post.poster_img ? `<img src="${ post.poster_img }" height="48px" width="48px" class="profile-img">` : `<div class="no-profile-img"><h4>${ post.user["0"].toUpperCase() }</h4></div>`
-            const likes = post.likes > 0 ? post.likes : ''
-            const liked = post.liked ? 'liked' : 'like'
-            const likedSVG = post.liked ? '<path d="M20.884 13.19c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path>' : '<path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path>'
-            
-            post_row.innerHTML = `
-                <div class="profile-pic">
-                    ${image_html}
-                </div>
-                <div class="post-content">
-                    <div class="post-head">
-                        <div class="post-details">
-                            <b><a id="userprofile" href="${ post.user }">${ post.user }</a></b> ${ post.timestamp }
-                        </div>
-                        <div class="post-options" onclick="postOptions(${post.id}, '${ post.user }', ${post.userpost}, ${post.userfollowed})">&#8226;&#8226;&#8226;</div>
+        if (posts.length > 0) {
+            posts.forEach(post => {
+
+                // Create post row div
+                const post_row = document.createElement('div');
+                post_row.classList.add('post-container');
+
+                const image_html = post.poster_img ? `<img src="${ post.poster_img }" height="48px" width="48px" class="profile-img">` : `<div class="no-profile-img"><h4>${ post.user["0"].toUpperCase() }</h4></div>`
+                const likes = post.likes > 0 ? post.likes : ''
+                const liked = post.liked ? 'liked' : 'like'
+                const likedSVG = post.liked ? '<path d="M20.884 13.19c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path>' : '<path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path>'
+                
+                post_row.innerHTML = `
+                    <div class="profile-pic">
+                        ${image_html}
                     </div>
-                    <div class="post-text post-${post.id}">${ post.content }</div>
-                    <div class="post-responses post-${post.id} span-3-col">
-                        <div class="${liked}" onclick="like_toggle(${post.id})">
-                            <div class="${liked}-svg">
-                                <svg viewBox="0 0 24 24" height="1.15em">
-                                    ${likedSVG}
-                                </svg>
+                    <div class="post-content">
+                        <div class="post-head">
+                            <div class="post-details">
+                                <b><a id="userprofile" href="${ post.user }">${ post.user }</a></b> ${ post.timestamp }
                             </div>
+                            <div class="post-options" onclick="postOptions(${post.id}, '${ post.user }', ${post.userpost}, ${post.userfollowed})">&#8226;&#8226;&#8226;</div>
+                        </div>
+                        <div class="post-text post-${post.id}">${ post.content }</div>
+                        <div class="post-responses post-${post.id} span-3-col">
+                            <div class="${liked}" onclick="like_toggle(${post.id})">
+                                <div class="${liked}-svg">
+                                    <svg viewBox="0 0 24 24" height="1.15em">
+                                        ${likedSVG}
+                                    </svg>
+                                </div>
 
-                            <div>${likes}</div>
-                        </div>
-                        <div class="comment">
-                            <div class="comment-svg">
-                                <svg viewBox="0 0 24 24" height="1.15em">
-                                    <path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path>
-                                </svg>
+                                <div>${likes}</div>
                             </div>
-                        </div>
-                        <div class="share">
-                            <div class="share-svg">
-                                <svg viewBox="0 0 24 24" height="1.15em">
-                                    <path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"></path>
-                                </svg>
+                            <div class="comment">
+                                <div class="comment-svg">
+                                    <svg viewBox="0 0 24 24" height="1.15em">
+                                        <path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="share">
+                                <div class="share-svg">
+                                    <svg viewBox="0 0 24 24" height="1.15em">
+                                        <path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"></path>
+                                    </svg>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                `
+                    `
 
-            document.querySelector('.posts-container').append(post_row);
-            if (index !== posts.length - 1) {
+                document.querySelector('.posts-container').append(post_row);
+                // if (index !== posts.length - 1) {
                 document.querySelector('.posts-container').insertAdjacentHTML("beforeend", '<hr>');
+                // }
+                
+            })
+            const paginator = document.createElement('div');
+            paginator.classList.add('paginator');
+            paginator.innerHTML = `Page ${page} of ${number_pages}`
+            document.querySelector('.posts-container').append(paginator);
+
+            if (current_page === 1) {
+                document.querySelector('.paginator').insertAdjacentHTML("afterbegin", `
+                <a class="page-link" disabled>&laquo; </a>
+                <a class="page-link" disabled>&lt; </a>
+                `)
+            } else {
+                document.querySelector('.paginator').insertAdjacentHTML("afterbegin", `
+                <a class="page-link"  onclick="load_posts('${profile}', '${filter}', 1)">&laquo; </a>
+                <a class="page-link" onclick="load_posts('${profile}', '${filter}', '${current_page - 1}')">&lt; </a>
+                `)
             }
-            
-        })
-        // const popup = document.createElement('div');
-        // popup.id = 'popup';
-        // popup.innerHTML = ""
-        // document.querySelector('.posts-container').append(popup);
+
+            if (current_page === number_pages) {
+                document.querySelector('.paginator').insertAdjacentHTML("beforeend", `
+                <a class="page-link" disabled> &gt;</a>
+                <a class="page-link" disabled> &raquo;</a>
+                `)
+            } else {
+                document.querySelector('.paginator').insertAdjacentHTML("beforeend", `
+                <a class="page-link" onclick="load_posts('${profile}', '${filter}', '${current_page + 1}')"> &gt;</a>
+                <a class="page-link" onclick="load_posts('${profile}', '${filter}', '${number_pages}')"> &raquo;</a>
+                `)
+            }
+        } else {
+            const message = document.createElement('div');
+            message.classList.add('no-posts-message');
+            message.innerHTML = `There are no posts to view in this list.`
+            document.querySelector('.posts-container').append(message);
+        }
     })
 }
 
@@ -224,22 +242,6 @@ function deleteConfirmation(post_id) {
     })
 }
 
-function deletePost(post_id) {
-    console.log(`Delete ${post_id}`)
-    
-    // fetch(`post/${post_id}`, {
-    //     method: 'POST',
-    //     body: JSON.stringify({
-    //         // csrftoken : getCookie('csrftoken'),
-    //         id: post_id,
-            
-    //     })
-    // })
-    // .then(() => {
-    //     location.reload()     // Maybe only reload post here?? or change svg element
-    // })
-}
-
 function editPost(post_id) {
     if (document.querySelector('.cancelEdit')) return;
 
@@ -247,8 +249,6 @@ function editPost(post_id) {
 
     var initial_text = document.querySelector(`.post-${post_id}`).innerHTML
     var post_responses_initial_html = document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML
-    console.log(initial_text)
-    console.log(post_responses_initial_html)
 
     document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-2-col`
 
@@ -290,9 +290,9 @@ function editPost(post_id) {
 }
 
 
-function formatDateTime(timestamp) {
-    var m = new Date(timestamp);
-    var dateString = m.getUTCFullYear() +"/"+ (m.getUTCMonth()+1) +"/"+ m.getUTCDate() + " " + m.getUTCHours() + ":" + m.getUTCMinutes() + ":" + m.getUTCSeconds();
+// function formatDateTime(timestamp) {
+//     var m = new Date(timestamp);
+//     var dateString = m.getUTCFullYear() +"/"+ (m.getUTCMonth()+1) +"/"+ m.getUTCDate() + " " + m.getUTCHours() + ":" + m.getUTCMinutes() + ":" + m.getUTCSeconds();
     
-    return dateString
-}
+//     return dateString
+// }
