@@ -7,8 +7,10 @@ from django.urls import reverse
 from django.http import JsonResponse
 from django.utils import timezone
 from django.core.paginator import Paginator
+from django.shortcuts import redirect
 
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 
 from .models import *
 from.forms import NewPostForm
@@ -45,11 +47,16 @@ def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
 
-# ADD FIRST AND LAST NAME TO REGISTRATION FUNCTION
 def register(request):
     if request.method == "POST":
         username = request.POST["username"]
         email = request.POST["email"]
+        first_name = request.POST["first_name"]
+        last_name = request.POST["last_name"]
+        if request.FILES.get("profile_img") != None:
+            profile_img = request.FILES["profile_img"]
+        else:
+            profile_img = None
 
         # Ensure password matches confirmation
         password = request.POST["password"]
@@ -61,7 +68,13 @@ def register(request):
 
         # Attempt to create new user
         try:
-            user = User.objects.create_user(username, email, password)
+            user = User.objects.create_user(username=username, 
+                                            email=email, 
+                                            password=password, 
+                                            first_name=first_name, 
+                                            last_name=last_name, 
+                                            profile_img=profile_img
+                                            )
             user.save()
           
         except IntegrityError:
@@ -94,8 +107,8 @@ def newPost(request):
             return render(request, "auctions/index.html", {
                 "newPostForm" : form
             })  
-        
-@csrf_exempt
+
+
 def profileView(request, user):
     
     profileUser = User.objects.get(username=user)
@@ -103,7 +116,7 @@ def profileView(request, user):
     if request.method == "GET":
         followers = Follower.objects.filter(following=profileUser.id)
         following = Follower.objects.filter(follower=profileUser.id)
-        if Follower.objects.filter(follower=request.user, following=profileUser.id):
+        if request.user.is_authenticated == True and Follower.objects.filter(follower=request.user, following=profileUser.id):
             followed_button_value = "Following"
         else:
             followed_button_value = "Follow"
@@ -114,55 +127,64 @@ def profileView(request, user):
             "following" : following,
             "followed_button_value" : followed_button_value
         })
+    
     elif request.method == "PUT":
-        data = json.loads(request.body)
-        if data.get("followed") == "Follow":
-            Follower.objects.create(follower=request.user, following=profileUser).save()
-        elif data.get("followed") == "Following":
-            Follower.objects.get(follower=request.user, following=profileUser.id).delete()
-        return HttpResponse(status=204)
-
-@csrf_exempt
-def postData(request, post_id):
-    print(request)
-    try:
-        post = Post.objects.get(pk=post_id)
-    except Post.DoesNotExist:
-        return JsonResponse({"error": "Post not found."}, status=404)
-
-    if request.method == "PUT":
-
-        likes = Like.objects.filter(post=post_id, user=request.user)
-
-        if likes:
-            likes.delete()
+        if request.user.is_authenticated:
+            data = json.loads(request.body)
+            if data.get("followed") == "Follow":
+                Follower.objects.create(follower=request.user, following=profileUser).save()
+            elif data.get("followed") == "Following":
+                Follower.objects.get(follower=request.user, following=profileUser.id).delete()
+            return HttpResponse(status=204)
         else:
-            Like.objects.create(post=post, user=request.user).save()
- 
-        return HttpResponse(status=204)
-    elif request.method == "POST":
-        data=json.loads(request.body)
-        
-        if data.get('process') == 'edit':
-            Post.objects.filter(pk=post_id).update(content=data.get('updated_post_text'), updatedtimestamp=timezone.now())
-            return HttpResponse(status=204)
-        
-        elif data.get('process') == 'delete':
-            Post.objects.filter(pk=post_id).delete()
-            return HttpResponse(status=204)
+            return JsonResponse({"error": "You are not logged in."}, status=401)
 
+
+def postData(request, post_id):
+
+    if request.user.is_authenticated:
+        try:
+            post = Post.objects.get(pk=post_id)
+        except Post.DoesNotExist:
+            return JsonResponse({"error": "Post not found."}, status=404)
+
+        if request.method == "PUT":
+
+            likes = Like.objects.filter(post=post_id, user=request.user)
+
+            if likes:
+                likes.delete()
+            else:
+                Like.objects.create(post=post, user=request.user).save()
+    
+            return HttpResponse(status=204)
+        elif request.method == "POST":
+            data=json.loads(request.body)
+            
+            if data.get('process') == 'edit':
+                Post.objects.filter(pk=post_id).update(content=data.get('updated_post_text'), updatedtimestamp=timezone.now())
+                return HttpResponse(status=204)
+            
+            elif data.get('process') == 'delete':
+                Post.objects.filter(pk=post_id).delete()
+                return HttpResponse(status=204)
+
+        else:
+            return JsonResponse({
+                "error": "PUT or POST request required."
+            }, status=400)
     else:
-        return JsonResponse({
-            "error": "PUT or POST request required."
-        }, status=400)
+        return JsonResponse({"error": "You are not logged in."}, status=401)
     
 
 def load_posts(request, profile):
 
-    profileUser = User.objects.get(username=profile)
+    if profile != 'no-profile':
+        profileUser = User.objects.get(username=profile)
+
     filter = request.GET.get('filter')
 
-    if filter == "all-posts" or filter == '':
+    if profile == 'no-profile' or filter == "all-posts" or filter == '':
         posts = Post.objects.all()
     elif filter == "following":
         followed_profiles = Follower.objects.filter(follower = request.user).values("following")
@@ -179,11 +201,10 @@ def load_posts(request, profile):
 
     posts = posts.order_by("-timestamp")
 
-    paginator = Paginator(posts, 2)
+    paginator = Paginator(posts, 4)
 
     page_number = request.GET.get('page')
     posts = paginator.get_page(page_number)
 
-    # print(paginator.num_pages)
 
     return JsonResponse({"posts" : [post.serialize(request.user.id) for post in posts], "number_pages" : paginator.num_pages}, safe=False)

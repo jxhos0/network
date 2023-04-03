@@ -30,7 +30,7 @@ class Post(models.Model):
         imgURL          = self.user.profile_img.url if self.user.profile_img else None
         liked           = True if Like.objects.filter(post=self, user=currentUserID) else False
         userpost        = True if self.user.id == currentUserID else False
-        userfollowed    = True if Follower.objects.filter(follower=User.objects.get(pk=currentUserID), following=self.user) else False
+        userfollowed    = True if Follower.objects.filter(follower=currentUserID, following=self.user) else False
         timestamp       = f'editted {self.updatedtimestamp.strftime("%Y/%m/%d, %H:%M:%S")}' if self.updatedtimestamp else self.timestamp.strftime("%Y/%m/%d, %H:%M:%S")
 
         return {

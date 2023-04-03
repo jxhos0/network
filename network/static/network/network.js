@@ -1,31 +1,38 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     if (document.getElementById('home-container')) {
-        var profile = document.querySelector('.current-user').innerHTML
 
-        document.querySelector('#all-posts').addEventListener('click', () => load_posts(`${profile}`, 'all-posts', 1));
-        document.querySelector('#following').addEventListener('click', () => load_posts(`${profile}`, 'following', 1));
-        // console.log('index page')
+        try {
+            var profile = document.querySelector('.current-user').innerHTML
+            console.log(profile)
+
+            document.querySelector('#all-posts').addEventListener('click', () => load_posts(`${profile}`, 'all-posts', 1));
+            document.querySelector('#following').addEventListener('click', () => load_posts(`${profile}`, 'following', 1));
+            // console.log('index page')
 
 
-        // Select the submit button and input to be used later
-        const submit = document.querySelector('#submit');
-        const newPost = document.querySelector('#id_content');
+            // Select the submit button and input to be used later
+            const submit = document.querySelector('#submit');
+            const newPost = document.querySelector('#id_content');
 
-        // Disable submit button by default:
-        submit.disabled = true;
+            // Disable submit button by default:
+            submit.disabled = true;
 
-        // Listen for input to be typed into the input field
-        newPost.onkeyup = () => {
-            if (newPost.value.length > 0) {
-                submit.disabled = false;
+            // Listen for input to be typed into the input field
+            newPost.onkeyup = () => {
+                if (newPost.value.length > 0) {
+                    submit.disabled = false;
+                }
+                else {
+                    submit.disabled = true;
+                }
             }
-            else {
-                submit.disabled = true;
-            }
+
+            load_posts(`${profile}`, 'all-posts', 1)
+        } catch (error) {
+            load_posts('no-profile', 'all-posts', 1)
         }
 
-        load_posts(`${profile}`, 'all-posts', 1)
 
 
     } else if (document.getElementById('profile-container')) {
@@ -33,7 +40,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // console.log(document.querySelector('.profile-user').innerHTML)
 
         // console.log(document.querySelector('#follow').innerHTML)
-
 
         document.querySelector('#profile-posts').addEventListener('click', () => load_posts(`${profile}`, 'profile-posts', 1));
         document.querySelector('#profile-comments').addEventListener('click', () => load_posts(`${profile}`, 'profile-comments', 1));
@@ -127,7 +133,7 @@ function load_posts(profile, filter, page) {
             })
             const paginator = document.createElement('div');
             paginator.classList.add('paginator');
-            paginator.innerHTML = `Page ${page} of ${number_pages}`
+            paginator.innerHTML = `<a class="page-link"><b>${current_page}</b>&ensp;&ensp;/&ensp;&ensp;<b>${number_pages}</b></a>`
             document.querySelector('.posts-container').append(paginator);
 
             if (current_page === 1) {
@@ -164,15 +170,22 @@ function load_posts(profile, filter, page) {
 
 function follow_toggle(profile, followed_value) {
     console.log(`${profile} ${followed_value}ed`)
-
+    
     fetch(`${profile}`, {
         method: 'PUT',
+        headers: {'X-CSRFToken': getCookie('csrftoken')},
+        mode: 'same-origin',
         body: JSON.stringify({
+            // csrftoken : getCookie('csrftoken'),
             followed : followed_value
         })
     })
-    .then(() => {
-        location.reload()
+    .then(function(response) {
+        if (response["status"] === 401)  {
+            location.href = 'http://127.0.0.1:8000/login'
+        } else if (response["status"] === 204) {
+            location.reload()
+        }
     })
 }
 
@@ -181,13 +194,18 @@ function like_toggle(post_id) {
     // console.log(csrftoken)
     fetch(`post/${post_id}`, {
         method: 'PUT',
+        headers: {'X-CSRFToken': getCookie('csrftoken')},
+        mode: 'same-origin',
         body: JSON.stringify({
-            // csrftoken : getCookie('csrftoken'),
             id: post_id
         })
     })
-    .then(() => {
-        location.reload()     // Maybe only reload post here?? or change svg element
+    .then(function(response) {
+        if (response["status"] === 401)  {
+            location.href = 'http://127.0.0.1:8000/login'
+        } else if (response["status"] === 204) {
+            location.reload() // maybe only reload post???
+        }
     })
 }
 
@@ -226,14 +244,19 @@ function deleteConfirmation(post_id) {
     document.querySelector('.deletePost').addEventListener('click', () => {
         fetch(`post/${post_id}`, {
             method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            mode: 'same-origin',
             body: JSON.stringify({
-                // csrftoken : getCookie('csrftoken'),
                 process : 'delete',
                 
             })
         })
-        .then(() => {
-            location.reload()     // Maybe only reload post here?? or change svg element
+        .then(function(response) {
+            if (response["status"] === 401)  {
+                location.href = 'http://127.0.0.1:8000/login'
+            } else if (response["status"] === 204) {
+                location.reload() //maybe only reload post?
+            }
         })
     });
 
@@ -272,23 +295,48 @@ function editPost(post_id) {
 
         fetch(`post/${post_id}`, {
             method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            mode: 'same-origin',
             body: JSON.stringify({
-                // csrftoken : getCookie('csrftoken'),
                 process: 'edit',
                 updated_post_text: updated_post_text
             })
         })
-        .then(() => {
-            document.querySelector(`.post-${post_id}`).innerHTML = `${updated_post_text}`
-            document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-3-col`
-            document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML = `${post_responses_initial_html}` 
+        .then(function(response) {
+            if (response["status"] === 401)  {
+                location.href = 'http://127.0.0.1:8000/login'
+            } else if (response["status"] === 204) {
+                document.querySelector(`.post-${post_id}`).innerHTML = `${updated_post_text}`
+                document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-3-col`
+                document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML = `${post_responses_initial_html}` 
+            }
         })
+        // .then(() => {
+        //     document.querySelector(`.post-${post_id}`).innerHTML = `${updated_post_text}`
+        //     document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-3-col`
+        //     document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML = `${post_responses_initial_html}` 
+        // })
     })
     
 
 
 }
 
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 
 // function formatDateTime(timestamp) {
 //     var m = new Date(timestamp);

@@ -8,7 +8,7 @@
         <div>{{ message }}</div>
     {% endif %}
 
-    <form action="{% url 'register' %}" method="post">
+    <form action="{% url 'register' %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <h4>Enter your details:</h4>
         <div class="form-group">
@@ -32,6 +32,13 @@
         <div class="form-group">
             <input class="form-control" type="password" name="confirmation" placeholder="Confirm Password">
         </div>
+
+        <br>
+        <h4>Upload a profile picture (optional)</h4>
+        <div class="form-group">
+            <input class="form-control" type="file" name="profile_img" accept="image/*">
+        </div>
+
         <input class="btn btn-primary" type="submit" value="Register">
     </form>
 
