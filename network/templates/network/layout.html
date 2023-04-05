@@ -11,7 +11,6 @@
     <body>
         <div class="container">
             <nav class="navbar navbar-light flex-sm-column">
-                <!-- <a class="navbar-brand" href="{% url 'index' %}">Network</a> -->
                 <div>
                     <a class="navbar-brand" href="{% url 'index' %}">Network</a>
                     <ul class="navbar-nav mr-auto">
@@ -24,9 +23,6 @@
                         <a class="nav-link" href="{% url 'index' %}">Home</a>
                         </li>
                         {% if user.is_authenticated %}
-                            <!-- <li class="nav-item">
-                                <a class="nav-link" href="#">Following</a>
-                            </li> -->
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
                             </li>

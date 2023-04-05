@@ -17,11 +17,10 @@ from.forms import NewPostForm
 
 
 def index(request):
-
+    # Load new post form into index page
     return render(request, "network/index.html", {
         "newPostForm" : NewPostForm(initial={"user" : request.user})
     })
-
 
 def login_view(request):
     if request.method == "POST":
@@ -41,7 +40,6 @@ def login_view(request):
             })
     else:
         return render(request, "network/login.html")
-
 
 def logout_view(request):
     logout(request)
@@ -93,8 +91,6 @@ def newPost(request):
         # Fill form with user entries
         form = NewPostForm(request.POST or None, request.FILES or None)
 
-        # print(form)
-
         # Check fields are valid and required fields have data
         if form.is_valid():
             form.save()    # Save the form data in database
@@ -108,18 +104,25 @@ def newPost(request):
                 "newPostForm" : form
             })  
 
-
 def profileView(request, user):
-    
+    # Get the profile user from the User database
     profileUser = User.objects.get(username=user)
 
+    # Check if request is retrieving or editting database
     if request.method == "GET":
+        # Get lists of profiles following and followed for the profile user
         followers = Follower.objects.filter(following=profileUser.id)
         following = Follower.objects.filter(follower=profileUser.id)
+
+        # Show a follow button for logged in users based on if they are already following the profile
         if request.user.is_authenticated == True and Follower.objects.filter(follower=request.user, following=profileUser.id):
+            # If user is logged in and follows the profile set followed button status to Following
             followed_button_value = "Following"
         else:
+            # If user is not logged in and follows the profile set followed button status to Follow
             followed_button_value = "Follow"
+
+        # Load profile page with profile data excluding the posts.
         return render(request, "network/profile.html", {
             "currentUser" : request.user,
             "profileUser" : profileUser,
@@ -129,44 +132,60 @@ def profileView(request, user):
         })
     
     elif request.method == "PUT":
+        # Check user is logged in before allowing them to follow a profile
         if request.user.is_authenticated:
+            # Get data from Javascript fetch API
             data = json.loads(request.body)
+
+            # If profile is not followed, add a Follower object with the user and profile.
             if data.get("followed") == "Follow":
                 Follower.objects.create(follower=request.user, following=profileUser).save()
+            
+            # If the profile is already followed, retrieve the Follower object entry and delete it.
             elif data.get("followed") == "Following":
                 Follower.objects.get(follower=request.user, following=profileUser.id).delete()
             return HttpResponse(status=204)
+        
+        # If the user is not logged in pass an error back to the web page stating there was an authentication error.
         else:
             return JsonResponse({"error": "You are not logged in."}, status=401)
 
-
 def postData(request, post_id):
-
+    # Check the user is logged in before running any script
     if request.user.is_authenticated:
+
+        # Try get the post data from the database
         try:
             post = Post.objects.get(pk=post_id)
         except Post.DoesNotExist:
             return JsonResponse({"error": "Post not found."}, status=404)
 
         if request.method == "PUT":
-
+            # Check entry in database for this post and user
             likes = Like.objects.filter(post=post_id, user=request.user)
 
+            # If user already likes the post, delete the database entry
             if likes:
                 likes.delete()
+
+            # If user does not like the post, create a new entry and save to database.
             else:
                 Like.objects.create(post=post, user=request.user).save()
-                print('liked')
     
             return HttpResponse(status=204)
+        
         elif request.method == "POST":
+            # Get data from Javascript fetch API
             data=json.loads(request.body)
             
+            # Check from the fetch data if post is being editted or deleted.
             if data.get('process') == 'edit':
+                # Get database object for the post and update the content field, while setting an updated timestamp.
                 Post.objects.filter(pk=post_id).update(content=data.get('updated_post_text'), updatedtimestamp=timezone.now())
                 return HttpResponse(status=204)
             
             elif data.get('process') == 'delete':
+                # Get database object for the post and delete it.
                 Post.objects.filter(pk=post_id).delete()
                 return HttpResponse(status=204)
 
@@ -174,40 +193,51 @@ def postData(request, post_id):
             return JsonResponse({
                 "error": "PUT or POST request required."
             }, status=400)
+        
+    # If the user is not logged in pass an error back to the web page stating there was an authentication error.
     else:
         return JsonResponse({"error": "You are not logged in."}, status=401)
     
-
 def load_posts(request, profile):
-
+    # Set the profile user and filter variables from the data parsed into the server
+    # If not the index page (profile is set to 'index'), get the users data from the database.
     if profile != 'index':
         profileUser = User.objects.get(username=profile)
 
     filter = request.GET.get('filter')
 
+    # If webpage is the index, return all posts.
     if profile == 'index' or filter == "all-posts" or filter == '':
         posts = Post.objects.all()
+
+    # If request was for posts of profiles followed, return filtered list of posts liked by the user.
     elif filter == "following":
-        followed_profiles = Follower.objects.filter(follower = request.user).values("following")
-        posts = Post.objects.filter(user__in=followed_profiles)
+        followed_profiles = Follower.objects.filter(follower = request.user).values("following")    
+        posts = Post.objects.filter(user__in=followed_profiles)    
 
+    # If request was for a profile's posts, return list of posts by the profile.
     elif filter == "profile-posts":
-        posts = Post.objects.filter(user=profileUser)
+        posts = Post.objects.filter(user=profileUser)   
 
+    # If request was for posts a profile has commented on, return list of posts commented on by the user.
     elif filter == "profile-comments":
-        posts_commented_on = Comment.objects.filter(user=profileUser).values("post")
+        posts_commented_on = Comment.objects.filter(user=profileUser).values("post")    
         posts = Post.objects.filter(pk__in=posts_commented_on)
 
+    # If request was for posts a profile has liked, return list of posts liked by the user.
     elif filter == "profile-likes":
         liked_posts = Like.objects.filter(user=profileUser).values("post")
         posts = Post.objects.filter(pk__in=liked_posts)
 
+    # Order the list in reverse chronological order 
     posts = posts.order_by("-timestamp")
 
+    # Paginate the data
     paginator = Paginator(posts, 10)
 
+    # Get the page number from the web page and load the posts from the paginated data
     page_number = request.GET.get('page')
     posts = paginator.get_page(page_number)
 
-
+    # Return the data from the paginated data to the webpage as JSON format
     return JsonResponse({"posts" : [post.serialize(request.user.id) for post in posts], "number_pages" : paginator.num_pages}, safe=False)
