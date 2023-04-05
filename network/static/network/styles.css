@@ -5,6 +5,7 @@ textarea {
 .container {
     margin: 0 auto;
     max-width: 873px;
+    height: 100vh;
     display: grid;
     grid-template-columns: 275px 598px;
 }
@@ -12,7 +13,14 @@ textarea {
 .body {
     max-width: 598px;
     border-left: 1px solid lightgray;
-    border-right: 1px solid lightgray;
+    border-right: 1px solid lightgray; 
+}
+
+#register, #login {
+    padding: 0.5rem;
+}
+#home-container h3 {
+    padding: 0.5rem 0 0 0.5rem;
 }
 
 #follow {
@@ -48,6 +56,10 @@ textarea {
     font-weight: bold;
 }
 
+.profile-user {
+    height: 3rem;
+}
+
 #submit {
     display: block;
     margin: 0 0 0 auto; 
@@ -80,16 +92,21 @@ textarea {
     margin: .5rem;
 }
 
-.new-post #id_content {
+#id_content {
     padding: 5px;
-    border-radius: 5px;
+    border-radius: 10px;
 }
 
 .post-container {
     display: grid;
     grid-template-columns: 48px 1fr;
     gap: 12px;
-    margin: .5rem;
+    padding: 1rem 0.5rem 1rem 0.5rem;
+    border-top: 1px solid lightgray;
+}
+
+.post-container:hover {
+    background-color: rgba(220, 220, 220, 0.2);
 }
 
 .no-profile-img {
@@ -116,6 +133,10 @@ textarea {
     border-radius: 50%;
 }
 
+.post-text {
+    padding: 3px 0px 2px 0px;
+}
+
 .post-options {
     width: 24px;
     height: 24px;
@@ -126,7 +147,6 @@ textarea {
 .post-options:hover {
     color: rgb(29, 155, 240);
     background: rgba(29, 155, 240, 0.1);
-
 }
 
 svg {
@@ -197,6 +217,10 @@ svg {
     padding: 10px 7px 10px 7px;
 }
 
+.profile-interactions {
+    padding-bottom: 3px;
+}
+
 #modal {
     max-width: 20rem;
     padding: 30px;
@@ -226,5 +250,43 @@ svg {
     display: flex;
     justify-content: center;
     gap: 3px;
+    padding-top: 1rem;
+    border-top: 1px solid lightgray;
     /* align-items: center;     */
+}
+
+.edit-option {
+    width: 100px;
+    height: 30px;
+    margin: auto;
+    line-height: 30px;
+    border-radius: 5px;
+}
+
+.edit-option:hover {
+    background-color: rgb(29, 155, 240);
+    color: white;
+}
+
+.selection {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.selector {
+    width: 56px;
+    height: 4px;
+    margin: auto;
+    border-radius: 2px;
+    background-color: rgb(29, 155, 240);
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.no-posts-message {
+    text-align: center;
+    padding: 1rem 0.5rem 1rem 0.5rem;
+    border-top: 1px solid lightgray;
 }

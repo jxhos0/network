@@ -8,8 +8,19 @@
 
         {% if user.is_authenticated %}
             <div class="posts-filter span-2-col">
-                <div id="all-posts">All posts</div>
-                <div id="following">Following</div>
+                <div id="all-posts">
+                    <div class="selection">
+                        All posts
+                    </div>
+                    <div class="selector"></div>
+                </div>
+                <div id="following">
+                    <div class="selection">
+                        Following
+                    </div>
+                    <div class="selector hidden"></div>
+                    
+                </div>
             </div>
             <div class="new-post">
                 <div class="profile-pic">
@@ -28,13 +39,6 @@
                 </form>
             </div>
         {% endif %}
-        <hr>
-        <div class="posts-container">
-
-            <!-- {% for post in posts %} 
-                {% include "network/post-row-template.html" %} 
-            {% empty %} 
-                Currently there are no posts to view. 
-            {% endfor %} -->
-        </div>
+        
+        <div class="posts-container"></div>
 {% endblock %}

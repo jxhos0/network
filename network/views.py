@@ -156,6 +156,7 @@ def postData(request, post_id):
                 likes.delete()
             else:
                 Like.objects.create(post=post, user=request.user).save()
+                print('liked')
     
             return HttpResponse(status=204)
         elif request.method == "POST":
@@ -179,12 +180,12 @@ def postData(request, post_id):
 
 def load_posts(request, profile):
 
-    if profile != 'no-profile':
+    if profile != 'index':
         profileUser = User.objects.get(username=profile)
 
     filter = request.GET.get('filter')
 
-    if profile == 'no-profile' or filter == "all-posts" or filter == '':
+    if profile == 'index' or filter == "all-posts" or filter == '':
         posts = Post.objects.all()
     elif filter == "following":
         followed_profiles = Follower.objects.filter(follower = request.user).values("following")
@@ -193,7 +194,9 @@ def load_posts(request, profile):
     elif filter == "profile-posts":
         posts = Post.objects.filter(user=profileUser)
 
-    # elif filter == "profile-comments":
+    elif filter == "profile-comments":
+        posts_commented_on = Comment.objects.filter(user=profileUser).values("post")
+        posts = Post.objects.filter(pk__in=posts_commented_on)
 
     elif filter == "profile-likes":
         liked_posts = Like.objects.filter(user=profileUser).values("post")
@@ -201,7 +204,7 @@ def load_posts(request, profile):
 
     posts = posts.order_by("-timestamp")
 
-    paginator = Paginator(posts, 4)
+    paginator = Paginator(posts, 10)
 
     page_number = request.GET.get('page')
     posts = paginator.get_page(page_number)

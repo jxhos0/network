@@ -1,15 +1,24 @@
 document.addEventListener('DOMContentLoaded', function() {
-
+    try {
+        current_user = document.querySelector('.current-user').innerHTML
+        console.log(`logged in user: ${current_user}`)
+    } catch (error) {
+        current_user = 'anonymous'
+    }
+    
     if (document.getElementById('home-container')) {
 
-        try {
-            var profile = document.querySelector('.current-user').innerHTML
-            console.log(profile)
-
-            document.querySelector('#all-posts').addEventListener('click', () => load_posts(`${profile}`, 'all-posts', 1));
-            document.querySelector('#following').addEventListener('click', () => load_posts(`${profile}`, 'following', 1));
-            // console.log('index page')
-
+        if (current_user !== 'anonymous') {
+            document.querySelector('#all-posts').addEventListener('click', () => {
+                document.querySelector('#all-posts .selector').className = 'selector'
+                document.querySelector('#following .selector').className = 'selector hidden'
+                load_posts(`${current_user}`, 'all-posts', 1)
+            });
+            document.querySelector('#following').addEventListener('click', () => {
+                document.querySelector('#all-posts .selector').className = 'selector hidden'
+                document.querySelector('#following .selector').className = 'selector'
+                load_posts(`${current_user}`, 'following', 1)
+            });
 
             // Select the submit button and input to be used later
             const submit = document.querySelector('#submit');
@@ -28,24 +37,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            load_posts(`${profile}`, 'all-posts', 1)
-        } catch (error) {
-            load_posts('no-profile', 'all-posts', 1)
+            load_posts(`${current_user}`, 'all-posts', 1)
+        } else {
+            load_posts('index', 'all-posts', 1)
         }
-
-
 
     } else if (document.getElementById('profile-container')) {
         var profile = document.querySelector('.profile-user').innerHTML
-        // console.log(document.querySelector('.profile-user').innerHTML)
 
-        // console.log(document.querySelector('#follow').innerHTML)
+        document.querySelector('#profile-posts').addEventListener('click', () => {
+            document.querySelector('#profile-posts .selector').className = 'selector'
+            document.querySelector('#profile-comments .selector').className = 'selector hidden'
+            document.querySelector('#profile-likes .selector').className = 'selector hidden'
+            load_posts(`${profile}`, 'profile-posts', 1)
+        });
+        
+        document.querySelector('#profile-comments').addEventListener('click', () => {
+            document.querySelector('#profile-posts .selector').className = 'selector hidden'
+            document.querySelector('#profile-comments .selector').className = 'selector'
+            document.querySelector('#profile-likes .selector').className = 'selector hidden'
+            load_posts(`${profile}`, 'profile-comments', 1)
+        });
+        
+        
+        document.querySelector('#profile-likes').addEventListener('click', () => {
+            document.querySelector('#profile-posts .selector').className = 'selector hidden'
+            document.querySelector('#profile-comments .selector').className = 'selector hidden'
+            document.querySelector('#profile-likes .selector').className = 'selector '
+            load_posts(`${profile}`, 'profile-likes', 1)
+        });
 
-        document.querySelector('#profile-posts').addEventListener('click', () => load_posts(`${profile}`, 'profile-posts', 1));
-        document.querySelector('#profile-comments').addEventListener('click', () => load_posts(`${profile}`, 'profile-comments', 1));
-        document.querySelector('#profile-likes').addEventListener('click', () => load_posts(`${profile}`, 'profile-likes', 1));
         if (document.querySelector('#follow')) {
-            document.querySelector('#follow').addEventListener('click', () => follow_toggle(document.querySelector('.profile-user').innerHTML, document.querySelector('.followed-value').innerHTML))
+            document.querySelector('#follow').addEventListener('click', () => follow_toggle(profile, document.querySelector('.followed-value').innerHTML))
         }
 
         load_posts(`${profile}`, 'profile-posts', 1)
@@ -78,6 +101,7 @@ function load_posts(profile, filter, page) {
 
                 // Create post row div
                 const post_row = document.createElement('div');
+                post_row.setAttribute('id', `post-${post.id}`)
                 post_row.classList.add('post-container');
 
                 const image_html = post.poster_img ? `<img src="${ post.poster_img }" height="48px" width="48px" class="profile-img">` : `<div class="no-profile-img"><h4>${ post.user["0"].toUpperCase() }</h4></div>`
@@ -94,11 +118,11 @@ function load_posts(profile, filter, page) {
                             <div class="post-details">
                                 <b><a id="userprofile" href="${ post.user }">${ post.user }</a></b> ${ post.timestamp }
                             </div>
-                            <div class="post-options" onclick="postOptions(${post.id}, '${ post.user }', ${post.userpost}, ${post.userfollowed})">&#8226;&#8226;&#8226;</div>
+                            <div class="post-options" onclick="postOptions(${post.id}, '${ post.user }', ${post.userpost}, ${post.userfollowed}, '${filter}', '${current_page}')">&#8226;&#8226;&#8226;</div>
                         </div>
-                        <div class="post-text post-${post.id}">${ post.content }</div>
-                        <div class="post-responses post-${post.id} span-3-col">
-                            <div class="${liked}" onclick="like_toggle(${post.id})">
+                        <div class="post-text">${ post.content }</div>
+                        <div class="post-responses span-3-col">
+                            <div class="${liked}" onclick="like_toggle(${post.id}, '${profile}', '${filter}', '${current_page}')">
                                 <div class="${liked}-svg">
                                     <svg viewBox="0 0 24 24" height="1.15em">
                                         ${likedSVG}
@@ -126,57 +150,57 @@ function load_posts(profile, filter, page) {
                     `
 
                 document.querySelector('.posts-container').append(post_row);
-                // if (index !== posts.length - 1) {
-                document.querySelector('.posts-container').insertAdjacentHTML("beforeend", '<hr>');
-                // }
-                
             })
-            const paginator = document.createElement('div');
-            paginator.classList.add('paginator');
-            paginator.innerHTML = `<a class="page-link"><b>${current_page}</b>&ensp;&ensp;/&ensp;&ensp;<b>${number_pages}</b></a>`
-            document.querySelector('.posts-container').append(paginator);
 
-            if (current_page === 1) {
-                document.querySelector('.paginator').insertAdjacentHTML("afterbegin", `
-                <a class="page-link" disabled>&laquo; </a>
-                <a class="page-link" disabled>&lt; </a>
-                `)
-            } else {
-                document.querySelector('.paginator').insertAdjacentHTML("afterbegin", `
-                <a class="page-link"  onclick="load_posts('${profile}', '${filter}', 1)">&laquo; </a>
-                <a class="page-link" onclick="load_posts('${profile}', '${filter}', '${current_page - 1}')">&lt; </a>
-                `)
+            if (number_pages > 1) {
+                const paginator = document.createElement('div');
+                paginator.classList.add('paginator');
+                paginator.innerHTML = `<a class="page-link"><b>${current_page}</b>&ensp;&ensp;/&ensp;&ensp;<b>${number_pages}</b></a>`
+                document.querySelector('.posts-container').append(paginator);
+    
+                if (current_page === 1) {
+                    document.querySelector('.paginator').insertAdjacentHTML("afterbegin", `
+                    <a class="page-link hidden" disabled>&laquo; </a>
+                    <a class="page-link hidden" disabled>&lt; </a>
+                    `)
+                } else {
+                    document.querySelector('.paginator').insertAdjacentHTML("afterbegin", `
+                    <a class="page-link"  onclick="load_posts('${profile}', '${filter}', 1)">&laquo; </a>
+                    <a class="page-link" onclick="load_posts('${profile}', '${filter}', '${current_page - 1}')">&lt; </a>
+                    `)
+                }
+    
+                if (current_page === number_pages) {
+                    document.querySelector('.paginator').insertAdjacentHTML("beforeend", `
+                    <a class="page-link hidden" disabled> &gt;</a>
+                    <a class="page-link hidden" disabled> &raquo;</a>
+                    `)
+                } else {
+                    document.querySelector('.paginator').insertAdjacentHTML("beforeend", `
+                    <a class="page-link" onclick="load_posts('${profile}', '${filter}', '${current_page + 1}')"> &gt;</a>
+                    <a class="page-link" onclick="load_posts('${profile}', '${filter}', '${number_pages}')"> &raquo;</a>
+                    `)
+                }
             }
 
-            if (current_page === number_pages) {
-                document.querySelector('.paginator').insertAdjacentHTML("beforeend", `
-                <a class="page-link" disabled> &gt;</a>
-                <a class="page-link" disabled> &raquo;</a>
-                `)
-            } else {
-                document.querySelector('.paginator').insertAdjacentHTML("beforeend", `
-                <a class="page-link" onclick="load_posts('${profile}', '${filter}', '${current_page + 1}')"> &gt;</a>
-                <a class="page-link" onclick="load_posts('${profile}', '${filter}', '${number_pages}')"> &raquo;</a>
-                `)
-            }
         } else {
             const message = document.createElement('div');
             message.classList.add('no-posts-message');
-            message.innerHTML = `There are no posts to view in this list.`
+            message.innerHTML = `${profile} currently has no posts to view in this list.`
             document.querySelector('.posts-container').append(message);
         }
     })
 }
 
-function follow_toggle(profile, followed_value) {
-    console.log(`${profile} ${followed_value}ed`)
+function follow_toggle(profile, followed_value, filter, page) {
+
+    if (current_user === profile) return;
     
     fetch(`${profile}`, {
         method: 'PUT',
         headers: {'X-CSRFToken': getCookie('csrftoken')},
         mode: 'same-origin',
         body: JSON.stringify({
-            // csrftoken : getCookie('csrftoken'),
             followed : followed_value
         })
     })
@@ -184,14 +208,17 @@ function follow_toggle(profile, followed_value) {
         if (response["status"] === 401)  {
             location.href = 'http://127.0.0.1:8000/login'
         } else if (response["status"] === 204) {
-            location.reload()
+            if (filter || page) {
+                load_posts(`${profile}`, `${filter}`, `${page}`)
+            } else {
+                location.reload()
+            }
         }
     })
 }
 
-function like_toggle(post_id) {
-    // const csrftoken = getCookie('csrftoken');
-    // console.log(csrftoken)
+function like_toggle(post_id, profile, filter, page) {
+
     fetch(`post/${post_id}`, {
         method: 'PUT',
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -204,26 +231,30 @@ function like_toggle(post_id) {
         if (response["status"] === 401)  {
             location.href = 'http://127.0.0.1:8000/login'
         } else if (response["status"] === 204) {
-            location.reload() // maybe only reload post???
+            load_posts(`${profile}`, `${filter}`, `${page}`)
         }
     })
 }
 
-function postOptions(post_id, profile, userpost, userfollowed) {
+// function reload_post(post_id) {
+
+// }
+
+function postOptions(post_id, profile, userpost, userfollowed, filter, page) {
 
     if (userpost) {
         document.querySelector('#popup').innerHTML = `
         <div onclick="editPost(${post_id})">Edit Post</div>
-        <div style="color:red" onclick="deleteConfirmation(${post_id})">Delete Post</div>
+        <div style="color:red" onclick="deleteConfirmation(${post_id}, '${profile}', '${filter}', '${page}')">Delete Post</div>
         `
     } else {
         if (!userfollowed) {
             document.querySelector('#popup').innerHTML = `
-            <div onclick="follow_toggle('${profile}', 'Follow')">Follow ${profile}</div>
+            <div onclick="follow_toggle('${profile}', 'Follow', '${filter}', '${page}')">Follow ${profile}</div>
             `
         } else {
             document.querySelector('#popup').innerHTML = `
-            <div onclick="follow_toggle('${profile}', 'Following')">Unfollow ${profile}</div>
+            <div onclick="follow_toggle('${profile}', 'Following', '${filter}', '${page}')">Unfollow ${profile}</div>
             `
         }
     }
@@ -238,7 +269,10 @@ function postOptions(post_id, profile, userpost, userfollowed) {
 
 }
 
-function deleteConfirmation(post_id) {
+function deleteConfirmation(post_id, profile, filter, page) {
+
+    if (document.querySelector('.cancelEdit') || current_user !== document.getElementById(`post-${post_id}`).querySelector('#userprofile').innerHTML) return;
+
     document.querySelector('#modal').showModal()
 
     document.querySelector('.deletePost').addEventListener('click', () => {
@@ -255,7 +289,8 @@ function deleteConfirmation(post_id) {
             if (response["status"] === 401)  {
                 location.href = 'http://127.0.0.1:8000/login'
             } else if (response["status"] === 204) {
-                location.reload() //maybe only reload post?
+                load_posts(`${profile}`, `${filter}`, `${page}`)
+                document.querySelector('#modal').close()
             }
         })
     });
@@ -266,32 +301,33 @@ function deleteConfirmation(post_id) {
 }
 
 function editPost(post_id) {
-    if (document.querySelector('.cancelEdit')) return;
+    if (document.querySelector('.cancelEdit') || current_user !== document.getElementById(`post-${post_id}`).querySelector('#userprofile').innerHTML) return;
 
-    // console.log(document.querySelector(`.post-${post_id}`).innerHTML)
+    var post_text_div = document.getElementById(`post-${post_id}`).getElementsByClassName('post-text')[0]
+    var post_response_div = document.getElementById(`post-${post_id}`).getElementsByClassName(`post-responses`)[0]
 
-    var initial_text = document.querySelector(`.post-${post_id}`).innerHTML
-    var post_responses_initial_html = document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML
+    var initial_text = post_text_div.innerHTML
+    var post_responses_initial_html = post_response_div.innerHTML
 
-    document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-2-col`
+    post_response_div.className = `post-responses span-2-col`
 
-    document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML = `
-    <div class="cancelEdit">Cancel</div>
-    <div class="saveEdit">Update</div>
+    post_response_div.innerHTML = `
+    <div class="edit-option cancelEdit">Cancel</div>
+    <div class="edit-option saveEdit">Update</div>
     `
 
-    document.querySelector(`.post-${post_id}`).innerHTML = `
+    post_text_div.innerHTML = `
         <textarea name="content" cols="40" rows="2" maxlength="300" placeholder="What's happening?" required="" id="id_content">${initial_text}</textarea>
     `
 
     document.querySelector('.cancelEdit').addEventListener('click', () => {
-        document.querySelector(`.post-${post_id}`).innerHTML = `${initial_text}`
-        document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-3-col`
-        document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML = `${post_responses_initial_html}`   
+        post_text_div.innerHTML = `${initial_text}`
+        post_response_div.className = 'post-responses span-3-col'
+        post_response_div.innerHTML = `${post_responses_initial_html}`   
     })
 
     document.querySelector('.saveEdit').addEventListener('click', () => {
-        const updated_post_text = document.querySelector(`.post-${post_id} #id_content`).value
+        const updated_post_text = document.getElementById(`post-${post_id}`).querySelector('#id_content').value
 
         fetch(`post/${post_id}`, {
             method: 'POST',
@@ -306,20 +342,12 @@ function editPost(post_id) {
             if (response["status"] === 401)  {
                 location.href = 'http://127.0.0.1:8000/login'
             } else if (response["status"] === 204) {
-                document.querySelector(`.post-${post_id}`).innerHTML = `${updated_post_text}`
-                document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-3-col`
-                document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML = `${post_responses_initial_html}` 
+                post_text_div.innerHTML = `${updated_post_text}`
+                post_response_div.className = 'post-responses span-3-col'
+                post_response_div.innerHTML = `${post_responses_initial_html}` 
             }
         })
-        // .then(() => {
-        //     document.querySelector(`.post-${post_id}`).innerHTML = `${updated_post_text}`
-        //     document.getElementsByClassName(`post-responses post-${post_id}`)[0].className = `post-responses post-${post_id} span-3-col`
-        //     document.getElementsByClassName(`post-responses post-${post_id}`)[0].innerHTML = `${post_responses_initial_html}` 
-        // })
     })
-    
-
-
 }
 
 function getCookie(name) {

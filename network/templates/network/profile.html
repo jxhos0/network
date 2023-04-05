@@ -12,22 +12,31 @@
 
             <div class="profile-name">{{ profileUser.first_name }} {{ profileUser.last_name }}</div>
             <div class="profile-user">{{ profileUser }}</div>
-            <div class="profile-network">{{ following.count }} Following &emsp; {{ followers.count }} Followers</div>    
+            <div class="profile-network"><b>{{ following.count }}</b> Following &emsp; <b>{{ followers.count }}</b> Followers</div>    
         </div>
         <div class="posts-activity-container">
             <div class="profile-interactions span-3-col">
-                <div id="profile-posts">Posts</div>
-                <div id="profile-comments">Comments</div>
-                <div id="profile-likes">Likes</div>
+                <div id="profile-posts">
+                    <div class="selection">
+                        Posts
+                    </div>
+                    <div class="selector"></div>
+                </div>
+                <div id="profile-comments">
+                    <div class="selection">
+                        Comments
+                    </div>
+                    <div class="selector hidden"></div>
+                </div>
+                <div id="profile-likes">
+                    <div class="selection">
+                        Likes
+                    </div>
+                    <div class="selector hidden"></div>
+                </div>
             </div>
-            <hr>
-            <div class="posts-container">
-                <!-- {% for post in posts %} 
-                    {% include "network/post-row-template.html" %} 
-                {% empty %} 
-                    Currently there are no posts to view. 
-                {% endfor %} -->
-            </div>
+
+            <div class="posts-container"></div>
         </div>
     </div>
 {% endblock %}
