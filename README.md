@@ -22,7 +22,16 @@ Django was implemented for the backend design to handle all database related asp
 
 HTML and CSS was used for the front-end design of this website, with JavaScript being implemented to load JSON data on the client side of the server. JavaScript is responsible for users being able to like/comment on posts and follow users without page reloads, as it uses the DOM to modify relevant HTML elements.
 
-Post lists are paginated, being limited to 10 posts per page, and user accounts can also be followed by interacting with the \*\*\* to the right of the post.
+Post lists are paginated, being limited to 10 posts per page, and user accounts can also be followed by interacting with the three dots to the right of the post.
+
+## How to run the application
+To run the app the only Python package not included in a standard Python install is Django.
+
+To run the app please follow the below steps:
+
+- Run your virtual environment (if using one)
+- pip install -r requirements.txt (if you don't already have Django installed)
+- python manage.py runserver
 
 ## Testing the Site
 
